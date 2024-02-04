@@ -1,0 +1,8 @@
+https://www.digitalocean.com/community/tutorials/how-to-remove-docker-images-containers-and-volumes
+https://www.youtube.com/watch?v=xQhRZLGv4_4
+https://www.youtube.com/watch?v=GlCloo47p_E
+https://ardabatuhandemir.medium.com/docker-container%C4%B1-%C3%BCzerine-grafana-prometheus-kurulumu-9fbe797ce593
+https://www.youtube.com/watch?v=tO2N0LLVZjI
+https://dylancastillo.co/fastapi-nginx-gunicorn/
+https://forums.docker.com/t/nginx-swarm-redeploy-timeouts/68904/4
+https://github.com/52385385/docker-nginx-ssl-registry/blob/master/ssl/openssl.cnf

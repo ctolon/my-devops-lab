@@ -1,0 +1,85 @@
+version: '3'
+
+networks:
+  mlflow_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.81.0.0/24
+          gateway: 172.81.0.1
+
+services:
+#  pgadmin-mlflow:
+#    image: dpage/pgadmin4
+#    depends_on:
+#      - postgresql-mlflow
+#    ports:
+#      - "5758:80"
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: admin@newmind.ai
+#      PGADMIN_DEFAULT_PASSWORD: nmnlp
+#    restart: unless-stopped
+#    networks:
+#      - mlops_network
+      
+  postgresql-mlflow:
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    image: postgresql-mlflow
+    container_name: postgresql-mlflow
+    user: postgres
+    hostname: postgresql
+    env_file:
+      - .env
+    ports:
+      - ${POSTGRES_PORT_EXT}:${POSTGRES_PORT_INT}
+    volumes:
+      - $PWD/postgres/init:/docker-entrypoint-initdb.d
+    restart: on-failure
+    cap_add: 
+      - SYS_NICE # CAP_SYS_NICE
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-d", "mlflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    networks:
+      mlflow_net:
+        ipv4_address: 172.81.0.2
+
+  mlflow:
+    build:
+      context: ./mlflow-tracking
+      dockerfile: Dockerfile
+    container_name: mlflow-tracking
+    image: mlflow-tracking
+    hostname: mlflow-tracking
+    volumes:
+      - postgres-mlflow-db-volume:/var/lib/postgresql/data
+      # - ./mlflow-tracking/auth_config.ini:/auth_config.ini
+    env_file:
+      - .env
+    depends_on:
+      - postgresql-mlflow
+    links:
+      - "postgresql-mlflow:postgresql-mlflow"
+    ports:
+      - ${MLFLOW_PORT}:80
+    command: >
+      /bin/bash -c "sleep 3
+      && mlflow server --workers=1 --host=0.0.0.0 --port=80 --backend-store-uri=postgresql+psycopg2://postgres:mysecret@postgresql/mlflow?sslmode=disable --default-artifact-root=s3://mlflow/ --expose-prometheus=/temp/prometheus_metrics"
+      # --app-name=basic-auth
+    restart: on-failure
+    networks:
+      mlflow_net:
+        ipv4_address: 172.81.0.3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:5000"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+  
+volumes:
+  postgres-mlflow-db-volume: {}

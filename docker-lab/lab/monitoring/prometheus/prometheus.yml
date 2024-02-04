@@ -1,0 +1,57 @@
+global:
+   scrape_interval: 15s
+   evaluation_interval: 15s
+
+# Load and evaluate rules in this file every 'evaluation_interval' seconds.
+rule_files:
+- "alert.rules"
+
+# A scrape configuration containing exactly one endpoint to scrape.
+scrape_configs:
+  - job_name: minio-job-cluster
+    metrics_path: /minio/v2/metrics/cluster
+    scheme: http
+    scrape_interval: 5m
+    scrape_timeout: 1m
+    static_configs:
+      - targets: ['172.80.0.6']
+
+  - job_name: minio-job-bucket
+    metrics_path: /minio/v2/metrics/bucket
+    scheme: http
+    static_configs:
+    - targets: ['minio-server-master.devops']
+
+  - job_name: minio-job-node
+    metrics_path: /minio/v2/metrics/node
+    scheme: http
+    static_configs:
+    - targets: ['minio-server-master.devops']
+
+  - job_name: 'prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['localhost:80']
+
+  - job_name: 'cadvisor'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['cadvisor:8080', 'localhost:8080']
+
+#  - job_name: 'nginx'
+#    scrape_interval: 10s
+#    static_configs:
+#      - targets: ['nginxexporter:9113']
+
+#  - job_name: 'aspnetcore'
+#    scrape_interval: 10s
+#    static_configs:
+#      - targets: ['eventlog-proxy:5000', 'eventlog:5000']
+
+alerting:
+  alertmanagers:
+  - scheme: http
+    static_configs:
+    - targets: 
+      - 'alertmanager:9093'
+

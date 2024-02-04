@@ -1,0 +1,46 @@
+version: '3.7'
+
+networks:
+  fastapi_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.82.0.0/24
+          gateway: 172.82.0.1
+
+#networks:
+#  nginx_nginx_net:
+#    external: true
+
+services:
+  fastapi_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${SERVICE_NAME}
+    image: "${SERVICE_IMAGE}:${SERVICE_TAG}"
+    hostname: ${SERVICE_NAME}
+    stdin_open: true
+    tty: true
+    env_file:
+      - .env
+    environment:
+      - PORT=${PORT_CONTAINER}
+      - API_VOL=${API_VOL}
+    restart: unless-stopped
+    volumes:
+      - ./app/:${API_VOL}/
+    working_dir: ${API_VOL}
+    ports:
+      - "5100:80"
+      #- "5100:5100"
+    expose:
+      - 80
+    networks:
+      #nginx_nginx_net:
+      fastapi_net:
+        #ipv4_address: ${IP_API}
+        ipv4_address: 172.82.0.2
+    command: python3 api.py
+    #command: /bin/bash

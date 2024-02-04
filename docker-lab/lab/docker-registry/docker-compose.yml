@@ -1,0 +1,55 @@
+version: "3.7"
+
+networks:
+  registry_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.83.0.0/24
+          gateway: 172.83.0.1
+
+services:
+  docker-registry:
+    image: registry:2.7
+    container_name: docker-registry
+    hostname: docker-registry
+    ports:
+     - 5160:443
+    networks:
+      registry_net:
+        ipv4_address: 172.83.0.2
+    restart: always
+    volumes:
+    - "registry-data:/var/lib/registry"
+    - "./conf/:/etc/docker/registry/"
+    - "./certs:/certs"
+    - "./auth:/auth"
+    env_file:
+      - .env
+
+  docker-registry-ui:
+    image: joxit/docker-registry-ui:main
+    container_name: docker-registry-ui
+    hostname: docker-registry-ml-ui
+    restart: always
+    networks:
+      registry_net:
+        ipv4_address: 172.83.0.3
+    ports:
+      - "9866:80"
+      - "9877:443"
+    environment:
+      - NGINX_PROXY_HEADER_X_Forwarded_For=$$proxy_add_x_forwarded_for
+    volumes:
+      - ./conf.d:/etc/nginx/conf.d
+      - ./certs/domain.crt:/etc/nginx/ssl/domain.crt:ro
+      - ./certs/domain.key:/etc/nginx/ssl/domain.key:ro
+      #- ./nginx/nginx.env:/etc/nginx/.env
+    env_file:
+      - .env
+    depends_on:
+      - docker-registry
+
+volumes:
+  registry-data:

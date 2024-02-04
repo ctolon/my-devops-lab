@@ -1,0 +1,26 @@
+version: '3.7'
+
+#networks:
+#  nginx_net:
+#    driver: bridge
+#    ipam:
+#      driver: default
+#      config:
+#        - subnet: 172.10.0.0/24
+#          gateway: 172.10.0.1
+
+services:
+  nginx:
+    image: ${IMAGE}
+    container_name: nginx
+    hostname: nginx
+    volumes:
+      - ./nginx/:/etc/nginx/
+    #ports:
+    #  - "80:80"
+    #  - "443:443"
+    restart: unless-stopped
+    network_mode: host
+    #networks:
+    #  nginx_net:
+    #    ipv4_address: 172.10.0.2
